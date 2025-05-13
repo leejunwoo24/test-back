@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -55,8 +56,22 @@ public class MenuServiceImpl implements MenuService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseDto<List<MenuResponseDto>> findAllMenu(Long restaurantId) {
-        return null;
+        List<MenuResponseDto> response = null;
+
+        Restaurant restaurant = restaurantRepository.findById(restaurantId)
+                .orElseThrow(() -> new EntityNotFoundException("존재하지 않는 레스토랑입니다." + restaurantId));
+
+        response = restaurant.getMenus().stream()
+                .map(menu -> new MenuResponseDto(
+                  menu.getId(),
+                  menu.getName(),
+                  menu.getPrice(),
+                  menu.getDescription())
+                ).collect(Collectors.toList());
+
+        return ResponseDto.setSuccess("성공", response);
     }
 
     @Override
